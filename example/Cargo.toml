@@ -1,0 +1,12 @@
+[package]
+name = "example"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "example"
+path = "main.rs"
+
+[dependencies]
+async_proc = { path = "../lib" }
+futures = "0.3.30"
