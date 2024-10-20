@@ -134,14 +134,15 @@ fn dummy_select_for_ide(input: TokenStream) -> TokenStream {
 
     quote! {
         #(#output)*
-    }.into()
+    }
+    .into()
 }
 
 #[allow(dead_code)]
 fn real_select(input: TokenStream) -> TokenStream {
     let input = TokenStream2::from(input);
     TokenStream::from(quote! {
-        futures::select! {
+        ::futures::select! {
             #input
         }
     })
