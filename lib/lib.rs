@@ -116,15 +116,33 @@ fn dummy_select_for_ide(input: TokenStream) -> TokenStream {
         match var_name {
             VarName::Ident(ident) => {
                 quote_spanned! { body.span() =>
-                    if true {
-                        let #ident = #expr.await;
-                        #body
+                    {
+                        {
+                            // silence "variable does not need to be mutable"
+                            // the extra scope is needed due to:
+                            // https://github.com/rust-lang/rust/issues/69663
+                            // - otherwise rustc thinks the borrow is carried
+                            //   accross the await
+                            let _ = &mut #expr;
+                        }
+                        // if current body has a return, the subsequent bodies will
+                        // be marked as unreachable by rustc. Avoid it with a
+                        // dummy condition
+                        if true {
+                            let #ident = #expr.await;
+                            // use a dummy binding to always effectively return ()
+                            // without appending anything at the end of body
+                            // (after all, it could be invalid syntax)
+                            let _ = {
+                                #body
+                            };
+                        }
                     }
                 }
             }
             VarName::Special => {
                 quote_spanned! { body.span() =>
-                    if true {
+                    let _ = {
                         #body
                     }
                 }
