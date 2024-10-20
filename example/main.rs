@@ -31,7 +31,5 @@ fn main() {
                 // autocompletion as usual
             }
         );
-
-
     });
 }
