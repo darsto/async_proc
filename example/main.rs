@@ -4,6 +4,8 @@
 
 // Use in your IDE; this doesn't build and it never will
 
+use futures::FutureExt;
+
 struct SomeStruct {
     name: String,
     val1: u64,
@@ -17,7 +19,7 @@ fn main() {
         };
 
         futures::select!(
-            _ = std::future::pending::<()>() => {
+            _ = std::future::pending::<()>().fuse() => {
                 some_object_with_whatever_name.
                 // place caret at the end;
                 // there is no autocompletion
@@ -25,7 +27,7 @@ fn main() {
         );
 
         async_proc::select!(
-            _ = std::future::pending::<()>() => {
+            _ = std::future::pending::<()>().fuse() => {
                 some_object_with_whatever_name.
                 // place caret at the end;
                 // autocompletion as usual

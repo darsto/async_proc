@@ -116,33 +116,31 @@ fn dummy_select_for_ide(input: TokenStream) -> TokenStream {
         match var_name {
             VarName::Ident(ident) => {
                 quote_spanned! { body.span() =>
-                    {
-                        {
-                            // silence "variable does not need to be mutable"
-                            // the extra scope is needed due to:
-                            // https://github.com/rust-lang/rust/issues/69663
-                            // - otherwise rustc thinks the borrow is carried
-                            //   accross the await
-                            let _ = &mut #expr;
-                        }
-                        // if current body has a return, the subsequent bodies will
-                        // be marked as unreachable by rustc. Avoid it with a
-                        // dummy condition
-                        if true {
-                            let #ident = #expr.await;
-                            // use a dummy binding to always effectively return ()
-                            // without appending anything at the end of body
-                            // (after all, it could be invalid syntax)
-                            let _ = {
-                                #body
-                            };
-                        }
+                    else if let ::futures::task::Poll::Ready(#ident) = {
+                        let mut fut = &mut #expr;
+                        // we should pin the future if it's passed to us by value
+                        // like the original select!() does, but since we don't want
+                        // to generate conditional proc-macro code, just unsafely
+                        // pin the future every time. This won't return any error even
+                        // if the future is !Unpin (and won't compile in the real select!)
+                        // This is a TODO.
+                        let mut fut = unsafe {
+                            ::core::pin::Pin::new_unchecked(fut)
+                        };
+                        // trigger an error if not a FusedFuture
+                        let _ = ::futures::future::FusedFuture::is_terminated(&fut);
+                        ::futures::future::FutureExt::poll_unpin(
+                            &mut fut,
+                            &mut ::futures::task::Context::from_waker(&::futures::task::noop_waker()),
+                        )
+                    } {
+                        #body
                     }
                 }
             }
             VarName::Special => {
                 quote_spanned! { body.span() =>
-                    let _ = {
+                    else if false {
                         #body
                     }
                 }
@@ -151,7 +149,13 @@ fn dummy_select_for_ide(input: TokenStream) -> TokenStream {
     });
 
     quote! {
+        if false {
+            unreachable!();
+        }
         #(#output)*
+        else {
+            unreachable!();
+        }
     }
     .into()
 }
