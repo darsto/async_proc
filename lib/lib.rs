@@ -117,7 +117,7 @@ fn dummy_select_for_ide(input: TokenStream) -> TokenStream {
             VarName::Ident(ident) => {
                 quote_spanned! { body.span() =>
                     else if let ::futures::task::Poll::Ready(#ident) = {
-                        let mut fut = &mut #expr;
+                        let fut = &mut #expr;
                         // we should pin the future if it's passed to us by value
                         // like the original select!() does, but since we don't want
                         // to generate conditional proc-macro code, just unsafely
