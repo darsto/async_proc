@@ -9,6 +9,7 @@ extern crate syn;
 use proc_macro::TokenStream;
 use proc_macro2::TokenStream as TokenStream2;
 use proc_macro2::TokenTree as TokenTree2;
+use quote::ToTokens;
 use quote::{quote, quote_spanned};
 use syn::parse::{Parse, ParseStream, Result};
 use syn::spanned::Spanned;
@@ -82,11 +83,13 @@ impl Parse for SelectInput {
                 VarName::Special => None,
             };
 
-            // collect tokens inside {} braces
-            let body: TokenStream2 = {
+            let body: TokenStream2 = if input.peek(syn::token::Brace) {
+                // collect tokens inside {} braces
                 let content;
                 syn::braced!(content in input);
                 content.parse::<TokenStream2>()?
+            } else {
+                input.parse::<Ident>()?.to_token_stream()
             };
 
             items.push(SelectItem {
