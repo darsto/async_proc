@@ -24,7 +24,11 @@ whatsoever.
 
 # How to use
 
-In your vscode settings.json add:
+Use the macro in an editor powered by rust-analyzer. It automatically detects
+rust-analyzer's proc-macro server, so no editor configuration is required.
+
+It can be also enforced by setting IS_RUST_ANALYZER env var.
+I.e. in vscode settings.json:
 ```
     "rust-analyzer.cargo.extraEnv": {
         "IS_RUST_ANALYZER": "1"

@@ -4,8 +4,6 @@
 
 // Use in your IDE; this doesn't build and it never will
 
-use futures::FutureExt;
-
 struct SomeStruct {
     name: String,
     val1: u64,

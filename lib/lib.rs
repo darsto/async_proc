@@ -175,9 +175,19 @@ fn real_select(input: TokenStream) -> TokenStream {
 
 #[proc_macro]
 pub fn select(input: TokenStream) -> TokenStream {
-    if std::env::var("IS_RUST_ANALYZER").is_ok_and(|v| v != "0" && v != "false") {
+    if is_rust_analyzer() {
         dummy_select_for_ide(input)
     } else {
         real_select(input)
+    }
+}
+
+fn is_rust_analyzer() -> bool {
+    match std::env::var("IS_RUST_ANALYZER") {
+        Ok(value) => value != "0" && value != "false",
+        Err(_) => std::env::current_exe().is_ok_and(|path| {
+            path.file_stem()
+                .is_some_and(|name| name == "rust-analyzer-proc-macro-srv")
+        }),
     }
 }
